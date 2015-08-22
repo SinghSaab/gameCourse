@@ -18,7 +18,7 @@ public class Player extends gameObject {
 
     public Player(Bitmap res, int w, int h, int numFrames) {
 
-        x = 100;
+        x = 0;
         y = gamePanel.HEIGHT / 2;
         dy = 0;
         score = 0;
@@ -33,7 +33,7 @@ public class Player extends gameObject {
         }
 
         animation.setFrames(image);
-        animation.setDelay(45);
+        animation.setDelay(40);
         startTime = System.nanoTime();
 
     }
@@ -54,11 +54,13 @@ public class Player extends gameObject {
 
         if (up) {
 //            Log.d("Player Class", "Going UP");
-            dy = (int) (dya -= 0.13);
+            dy = (int) (dya -= 0.30);   //ideal is 0.13
+//            The acceleration with which the player will do up
 
         } else {
 //            Log.d("Player Class", "Going DOWN");
-            dy = (int) (dya += 0.10);
+            dy = (int) (dya += 0.15);
+//            The acceleration with which the player will do down
         }
 
         if (dy > 8) dy = 8;

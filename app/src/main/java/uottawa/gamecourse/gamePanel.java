@@ -17,8 +17,8 @@ import java.util.Random;
 
 public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
-    public static final int WIDTH = 507;
-    public static final int HEIGHT = 102;
+    public static final int WIDTH = 1280;
+    public static final int HEIGHT = 768;
     public static final int MOVESPEED = -5;
     private long enemyStartTime;
     private long enemyElapsed;
@@ -61,7 +61,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.mountain_blue));
+        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 129, 67, 2);
         enemy = new ArrayList<Enemy>();
         enemyStartTime = System.nanoTime();
@@ -142,10 +142,12 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void draw(Canvas canvas) {
+        super.draw(canvas);
+
 
 //      get the width "getWidth()" of the physical device
-        final float scaleFactorX = getWidth() / (WIDTH * 1.f);
-        final float scaleFactorY = getHeight() / (HEIGHT * 1.f) / 2;
+//        final float scaleFactorX = getWidth() / (WIDTH * 1.f);
+//        final float scaleFactorY = getHeight() / (HEIGHT * 1.f) / 2;
 
 //          For the above method to follow, image size should be smaller than device size
 //        else use the value of 1,1 for both
@@ -153,13 +155,13 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (canvas != null) {
             final int savedState = canvas.save();
 //            Still background drawing
-            Background bgStill = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.sky_blue_still));
+            Background bgStill = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_sky));
             bgStill.draw(canvas);
 //            Moving background drawing
-            canvas.scale(scaleFactorX, scaleFactorY, 0, -140);
+//            canvas.scale(1, scaleFactorY, 0, -550);
+//            canvas.scale(1, 1, 0, 0);
             bg.draw(canvas);
             player.draw(canvas);
-
             for (Enemy e : enemy) {
                 e.draw(canvas);
             }
