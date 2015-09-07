@@ -28,6 +28,13 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private ArrayList<Enemy> enemy;
     private Random rand = new Random();
 
+
+    private Explosion explosion;
+    private long startReset;
+    private boolean reset;
+    private boolean disappear;
+    private boolean started;
+
     public gamePanel(Context context) {
         super(context);
 
@@ -62,7 +69,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land));
-        player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 129, 67, 2);
+        player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 150, 100, 2);
         enemy = new ArrayList<Enemy>();
         enemyStartTime = System.nanoTime();
         thread.setRunning(true);
@@ -76,6 +83,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             if (!player.getPlaying()) {
                 player.setPlaying(true);
             } else {
+                if (!started) started = true;
+                reset = false;
                 player.setUp(true);
             }
             return true;
@@ -90,6 +99,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public void update() {
         if (player.getPlaying()) {
+
             bg.update();
             player.update();
 
@@ -129,12 +139,19 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     break;
                 }
             }
+        } else {
+            player.resetDYA();
+            explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.collide),
+                    player.getX(), player.getY(), 151, 100, 4);
+
+            explosion.update();
         }
     }
 
     public boolean collision(gameObject a, gameObject b) {
 
         if (Rect.intersects(a.getRectangle(), b.getRectangle())) {
+
             return true;
         }
         return false;
@@ -165,6 +182,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             for (Enemy e : enemy) {
                 e.draw(canvas);
             }
+            if (started)
+                explosion.draw(canvas);
             canvas.restoreToCount(savedState);
         }
 
