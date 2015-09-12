@@ -2,7 +2,6 @@ package uottawa.gamecourse;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.util.Log;
 
 /**
  * Created by Administrator on 2015-08-16.
@@ -53,12 +52,10 @@ public class Player extends gameObject {
         animation.update();
 
         if (up) {
-//            Log.d("Player Class", "Going UP");
             dy = (int) (dya -= 0.30);   //ideal is 0.13
 //            The acceleration with which the player will do up
 
         } else {
-//            Log.d("Player Class", "Going DOWN");
             dy = (int) (dya += 0.15);
 //            The acceleration with which the player will do down
         }
@@ -93,4 +90,5 @@ public class Player extends gameObject {
     public void resetScore() {
         score = 0;
     }
+
 }
