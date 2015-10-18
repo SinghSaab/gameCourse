@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -24,6 +23,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 768;
     public static final int MOVESPEED = -5;
+    public static boolean homescreen = false;
     private long enemyStartTime;
     private long enemyElapsed;
     private MainThread thread;
@@ -42,8 +42,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private int progressDenom = 20;
     //
     private Random rand = new Random();
-
-
     private Explosion explosion;
     private long startReset;
     private boolean reset;
@@ -68,7 +66,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.d("In surfaceDestroyed()", "");
+        //Log.d("In surfaceDestroyed()", "");
 
         boolean retry = true;
         int counter = 0;
@@ -88,7 +86,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        Log.d("In surfaceCreated()", "");
+        //Log.d("In surfaceCreated()", "");
 
         bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 150, 100, 2);
@@ -96,25 +94,39 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         topborder = new ArrayList<TopBorder>();
         botborder = new ArrayList<BotBorder>();
         enemyStartTime = System.nanoTime();
-        //        Instantiate MainThread
+
+//      Instantiate MainThread
         thread = new MainThread(getHolder(), this);
 
 //      We can safely start the game loop
         thread.setRunning(true);
         thread.start();
+
+//      Game didn't used to start at beginning  bcoz waiting for onTouchEvent, hence this will start game automatically
+        player.setPlaying(true);
+        homescreen = true;
+//      Unless homescreen is off, player will be stayed at the middle of screen(check Player.java)
+
+        /*
+//      This will setup player going down
+        player.setUp(false);
+//      This will setup player going up
+        player.setUp(true);
+        */
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d("In onTouchEvent()", "");
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            if (!player.getPlaying() && newGameCreated && reset) {
+
+            if (!player.getPlaying()) {
                 player.setPlaying(true);
                 player.setUp(true);
             }
             if (player.getPlaying()) {
                 if (!started) started = true;
+                homescreen = false;
                 reset = false;
                 player.setUp(true);
             }
@@ -129,25 +141,25 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
-        Log.d("In update()", "");
-
+        //Log.d("In update()", "");
+        //Log.d("player.getPlaying",String.valueOf(player.getPlaying()));
         if (player.getPlaying()) {
-            Log.d("In update.getPlaying()", "");
+            //Log.d("In update.getPlaying()", "");
 
 
-            if (botborder.isEmpty()) {
-                Log.d("In botborder.isEmpty()", "");
-
-                player.setPlaying(false);
-                return;
-            }
-
-            if (topborder.isEmpty()) {
-                Log.d("In topborder.isEmpty()", "");
-
-                player.setPlaying(false);
-                return;
-            }
+//            if (botborder.isEmpty()) {
+//                //Log.d("In botborder.isEmpty()", "");
+//
+//                player.setPlaying(false);
+//                return;
+//            }
+//
+//            if (topborder.isEmpty()) {
+//                //Log.d("In topborder.isEmpty()", "");
+//
+//                player.setPlaying(false);
+//                return;
+//            }
 
             bg.update();
             player.update();
@@ -163,7 +175,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //            check bottom border collision
             for (int i = 0; i < botborder.size(); i++) {
                 if (collision(botborder.get(i), player)) {
-                    player.setPlaying(false);     //reset the game
+                    player.setPlaying(false);     //reset the game; reset changes to true(from beg) to false(at count==3)
 //                    player.setY(HEIGHT - (HEIGHT / 8)); //keep player at the bottom of screen
 
                 }
@@ -185,8 +197,9 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             long enemyElapsed = (System.nanoTime() - enemyStartTime) / 1000000;
 
-//            As score goes higher, less delay between enemy launches
-            if (enemyElapsed > (2000 - player.getScore() / 4)) {
+//          Unless homescreen is not off, don't add any enemy to the canvas
+//          As score goes higher, less delay between enemy launches
+            if (enemyElapsed > (2000 - player.getScore() / 4) && !homescreen) {
 //                first enemy always goes down the middle
                 if (enemy.size() == 0) {
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
@@ -196,7 +209,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //                If first missile if off the screen, start randomizing the location of every other missile
                 else {
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
-                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - (maxborderheight * 2)) + maxborderheight)),
+                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
                             91, 27, player.getScore(), 8));
                 }
 
@@ -211,11 +224,11 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //                detect collision with player
                 if (collision(enemy.get(i), player)) {
                     enemy.remove(i);
-                    count++;
-                    Log.d("Damage", String.valueOf(count));
+                    ++count;
+                    //Log.d("Damage", String.valueOf(count));
                     if (count == 3) {    //on 3 collisions with missile, reset the game
                         player.setPlaying(false);
-                        count = 0;
+//                      reset changes to true(from beg)to false (at count == 3)count = 0;
                         break;
                     }
                 }
@@ -226,14 +239,21 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         } else {
-            Log.d("In update.else()", "");
+            //Log.d("In update.else()", "");
             player.resetDYA();
+//          <reset> is true at the beginning and <count>=0
+//            //Log.d(String.valueOf(reset),String.valueOf(count));
 
-            if (!reset) {
+            if (!reset && count == 3) {       //every reset is when collision occurs,
+                // but at the same time count should be 3(3 lives) as well
+//                at beginning of game, reset=true, count = 0
+//                 at end of game, reset = false, count = 3
                 newGameCreated = false;
+                player.setPlaying(false);
                 startReset = System.nanoTime();
                 reset = true;
                 disappear = true;
+                enemy.clear();
                 explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.collide),
                         player.getX(), player.getY() - 30, 151, 100, 4);
             }
@@ -260,17 +280,14 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void draw(Canvas canvas) {
-
-        Log.d("In draw()", "");
-
-
 //      get the width "getWidth()" of the physical device
 //        final float scaleFactorX = getWidth() / (WIDTH * 1.f);
 //        final float scaleFactorY = getHeight() / (HEIGHT * 1.f) / 2;
 
 //          For the above method to follow, image size should be smaller than device size
 //        else use the value of 1,1 for both
-//        IF THE IMAGE SIZE IS SAME AS THAT OF NEXUS4, I CAN EVEN SKIP THE STEPS OF SCALEFACTORX,Y
+//        IF THE IMAGE SIZE IS SAME AS THAT OF NEXUS4, ONE CAN EVEN SKIP THE STEPS OF SCALEFACTOR X,Y
+
         if (canvas != null) {
             final int savedState = canvas.save();
 //            Still background drawing
@@ -280,11 +297,14 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //            canvas.scale(1, scaleFactorY, 0, -550);
 //            canvas.scale(1, 1, 0, 0);
             bg.draw(canvas);
+            drawText(canvas);
             if (!disappear) {
                 player.draw(canvas);
             }
-            for (Enemy e : enemy) {
-                e.draw(canvas);
+            if (!homescreen) {
+                for (Enemy e : enemy) {
+                    e.draw(canvas);
+                }
             }
 
             for (TopBorder tb : topborder) {
@@ -297,7 +317,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             if (started) {
                 explosion.draw(canvas);
             }
-            drawText(canvas);
+
             canvas.restoreToCount(savedState);
         }
 
@@ -391,7 +411,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void newGame() {
-        Log.d("In newGame()", "");
 
         disappear = false;
 
@@ -453,24 +472,28 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void drawText(Canvas canvas) {
-        Log.d("In drawText()", "");
 
-        Paint paint = new Paint();
-        paint.setColor(Color.BLACK);
-        paint.setTextSize(30);
-        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        canvas.drawText("DISTANCE: " + (player.getScore() * 3), 10, HEIGHT - 10, paint);
-        canvas.drawText("BEST: " + best, WIDTH - 215, HEIGHT - 10, paint);
+//      When homescreen is not displayed
+        if (!homescreen) {
+            Paint paint = new Paint();
+            paint.setColor(Color.WHITE);
+            paint.setTextSize(30);
+            paint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
+            canvas.drawText("DISTANCE: " + (player.getScore() * 3), 10, HEIGHT - 10, paint);
+            canvas.drawText("BEST: " + best, WIDTH - 215, HEIGHT - 10, paint);
+        }
 
-        if (!player.getPlaying() && newGameCreated && reset) {
+//      When homescreen is displayed
+        if (homescreen) {
             Paint paint1 = new Paint();
-            paint1.setTextSize(40);
-            paint1.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+            paint1.setTextSize(50);
+            paint1.setColor(Color.WHITE);
+            paint1.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD));
             canvas.drawText("PRESS TO START", WIDTH / 2 - 50, HEIGHT / 2, paint1);
 
-            paint1.setTextSize(20);
-            canvas.drawText("PRESS AND HOLD TO GO UP", WIDTH / 2 - 50, HEIGHT / 2 + 20, paint1);
-            canvas.drawText("RELEASE TO GO DOWN", WIDTH / 2 - 50, HEIGHT / 2 + 40, paint1);
+            paint1.setTextSize(35);
+            canvas.drawText("PRESS AND HOLD TO GO UP", WIDTH / 2 - 50, HEIGHT / 2 + 45, paint1);
+            canvas.drawText("RELEASE TO GO DOWN", WIDTH / 2 - 50, HEIGHT / 2 + 75, paint1);
         }
     }
 

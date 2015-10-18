@@ -44,6 +44,7 @@ public class Player extends gameObject {
     }
 
     public void update() {
+//        Log.d("Player", "update method");
         long elapsed = (System.nanoTime() - startTime) / 1000000;
         if (elapsed > 100) {
             score++;
@@ -51,20 +52,23 @@ public class Player extends gameObject {
         }
         animation.update();
 
-        if (up) {
-            dy = (int) (dya -= 0.30);   //ideal is 0.13
+//      Unless homescreen is off, player will be stayed at the middle of screen(check Player.java)
+        if (!gamePanel.homescreen) {
+            if (up) {
+                dy = (int) (dya -= 0.30);   //ideal is 0.13
 //            The acceleration with which the player will do up
 
-        } else {
-            dy = (int) (dya += 0.15);
+            } else {
+                dy = (int) (dya += 0.15);
 //            The acceleration with which the player will do down
+            }
+
+            if (dy > 8) dy = 8;
+            if (dy < -8) dy = -8;
+
+            y += dy * 3;
+            dy = 0;
         }
-
-        if (dy > 8) dy = 8;
-        if (dy < -8) dy = -8;
-
-        y += dy * 3;
-        dy = 0;
     }
 
     public void draw(Canvas canvas) {
@@ -84,7 +88,7 @@ public class Player extends gameObject {
     }
 
     public void resetDYA() {
-        dya = 0;
+        dy = 0;
     }
 
     public void resetScore() {

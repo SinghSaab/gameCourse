@@ -1,18 +1,19 @@
 package uottawa.gamecourse;
 
 import android.graphics.Canvas;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 /**
  * Created by Administrator on 2015-08-15.
  */
 public class MainThread extends Thread {
-    private int FPS = 36;
+    public static Canvas canvas;
+    private int FPS = 26;
     private double averageFPS;
     private SurfaceHolder surfaceHolder;
     private gamePanel gamePanel;
     private boolean running;
-    public static Canvas canvas;
 
     public MainThread(SurfaceHolder surfaceHolder, gamePanel gamePanel) {
         super();
@@ -35,6 +36,8 @@ public class MainThread extends Thread {
 
             try {
                 canvas = this.surfaceHolder.lockCanvas();
+//                Log.d("MainThread", "Canvas Created");
+
                 synchronized (surfaceHolder) {
                     this.gamePanel.update();
                     this.gamePanel.draw(canvas);
@@ -49,7 +52,6 @@ public class MainThread extends Thread {
                     }
                 }
             }
-
 
             timeMillis = (System.nanoTime() - startTime) / 1000000;
             waitTime = targetTime - timeMillis;
