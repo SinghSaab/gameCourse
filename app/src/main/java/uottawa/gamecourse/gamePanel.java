@@ -239,11 +239,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         } else {
-            //Log.d("In update.else()", "");
             player.resetDYA();
-//          <reset> is true at the beginning and <count>=0
-//            //Log.d(String.valueOf(reset),String.valueOf(count));
-
             if (!reset && count == 3) {       //every reset is when collision occurs,
                 // but at the same time count should be 3(3 lives) as well
 //                at beginning of game, reset=true, count = 0
@@ -480,6 +476,20 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             paint.setTextSize(30);
             paint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
             canvas.drawText("DISTANCE: " + (player.getScore() * 3), 10, HEIGHT - 10, paint);
+            if (count == 0) {
+                paint.setColor(Color.GREEN);
+                canvas.drawText("❤❤❤", WIDTH / 2 - 60, HEIGHT - 10, paint);
+            } else if (count == 1) {
+                paint.setColor(Color.rgb(255, 128, 0));
+                canvas.drawText("❤❤⛶", WIDTH / 2 - 60, HEIGHT - 10, paint);
+            } else if (count == 2) {
+                paint.setColor(Color.RED);
+                canvas.drawText("❤⛶⛶", WIDTH / 2 - 60, HEIGHT - 10, paint);
+            } else if (count == 3) {
+                paint.setColor(Color.RED);
+                canvas.drawText("⛶⛶⛶", WIDTH / 2 - 60, HEIGHT - 10, paint);
+            }
+            paint.setColor(Color.WHITE);
             canvas.drawText("BEST: " + best, WIDTH - 215, HEIGHT - 10, paint);
         }
 

@@ -1,7 +1,6 @@
 package uottawa.gamecourse;
 
 import android.graphics.Canvas;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 /**
@@ -36,8 +35,6 @@ public class MainThread extends Thread {
 
             try {
                 canvas = this.surfaceHolder.lockCanvas();
-//                Log.d("MainThread", "Canvas Created");
-
                 synchronized (surfaceHolder) {
                     this.gamePanel.update();
                     this.gamePanel.draw(canvas);
@@ -68,7 +65,7 @@ public class MainThread extends Thread {
                 averageFPS = 1000 / ((totalTime / frameCount) / 1000000);
                 frameCount = 0;
                 totalTime = 0;
-                System.out.println("Average FPS:"+averageFPS);
+//              System.out.println("Average FPS:"+averageFPS);
             }
 
         }
@@ -78,5 +75,4 @@ public class MainThread extends Thread {
     public void setRunning(boolean b) {
         running = b;
     }
-
 }
