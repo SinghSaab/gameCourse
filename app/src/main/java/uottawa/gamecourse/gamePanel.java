@@ -106,13 +106,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         player.setPlaying(true);
         homescreen = true;
 //      Unless homescreen is off, player will be stayed at the middle of screen(check Player.java)
-
-        /*
-//      This will setup player going down
-        player.setUp(false);
-//      This will setup player going up
-        player.setUp(true);
-        */
     }
 
     @Override
@@ -121,13 +114,13 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
             if (!player.getPlaying()) {
+                newGameCreated = true;
                 player.setPlaying(true);
                 player.setUp(true);
             }
             if (player.getPlaying()) {
                 if (!started) started = true;
                 homescreen = false;
-                reset = false;
                 player.setUp(true);
             }
             return true;
@@ -141,11 +134,15 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
-        //Log.d("In update()", "");
-        //Log.d("player.getPlaying",String.valueOf(player.getPlaying()));
-        if (player.getPlaying()) {
-            //Log.d("In update.getPlaying()", "");
+//        After an game ends, newGameCreated is set to true; so, this loop tests if reset occurred and then begin new game
+//        Lives regenerated and set setPlaying() to true
+        if (newGameCreated) {
+            newGameCreated = false;
+            count = 0;
+            player.setPlaying(true);
+        }
 
+        if (player.getPlaying()) {
 
 //            if (botborder.isEmpty()) {
 //                //Log.d("In botborder.isEmpty()", "");
@@ -194,11 +191,9 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //            Update bottom border
             this.updateBottomBorder();
 
-
             long enemyElapsed = (System.nanoTime() - enemyStartTime) / 1000000;
 
-//          Unless homescreen is not off, don't add any enemy to the canvas
-//          As score goes higher, less delay between enemy launches
+//          No enemy on home-screen and as score goes higher, less delay between enemy launches
             if (enemyElapsed > (2000 - player.getScore() / 4) && !homescreen) {
 //                first enemy always goes down the middle
                 if (enemy.size() == 0) {
@@ -219,16 +214,20 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
 //              loop through every missile
             for (int i = 0; i < enemy.size(); i++) {
-//                update enemy obj
                 enemy.get(i).update();
 //                detect collision with player
                 if (collision(enemy.get(i), player)) {
                     enemy.remove(i);
                     ++count;
-                    //Log.d("Damage", String.valueOf(count));
-                    if (count == 3) {    //on 3 collisions with missile, reset the game
+/*                    explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.collide),
+                                player.getX(), player.getY() - 30, 151, 100, 4);
+                    explosion.update();
+                    */
+//                  On 3 collisions, game ends
+                    if (count == 3) {
+                        if (best < player.getScore())
+                            best = player.getScore();
                         player.setPlaying(false);
-//                      reset changes to true(from beg)to false (at count == 3)count = 0;
                         break;
                     }
                 }
@@ -239,36 +238,22 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         } else {
+//          There is only 1 case for this execution cycle; when player dies.
+            player.setPlaying(false);
+            player.resetScore();
             player.resetDYA();
-            if (!reset && count == 3) {       //every reset is when collision occurs,
-                // but at the same time count should be 3(3 lives) as well
-//                at beginning of game, reset=true, count = 0
-//                 at end of game, reset = false, count = 3
-                newGameCreated = false;
-                player.setPlaying(false);
-                startReset = System.nanoTime();
-                reset = true;
-                disappear = true;
-                enemy.clear();
-                explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.collide),
-                        player.getX(), player.getY() - 30, 151, 100, 4);
-            }
-
-            explosion.update();
-            long resetElapsed = (System.nanoTime() - startReset) / 1000000;
-
-            if (resetElapsed > 2500 && !newGameCreated) {
-                newGame();
-            }
-
-
+            enemy.clear();
+            homescreen = true;
+            player.setY(HEIGHT / 2);
+            player.setX(0);
+            startReset = System.nanoTime();
+            newGameCreated = true;
+//          long resetElapsed = (System.nanoTime() - startReset) / 1000000;
         }
     }
 
     public boolean collision(gameObject a, gameObject b) {
-
         if (Rect.intersects(a.getRectangle(), b.getRectangle())) {
-
             return true;
         }
         return false;
@@ -279,7 +264,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //      get the width "getWidth()" of the physical device
 //        final float scaleFactorX = getWidth() / (WIDTH * 1.f);
 //        final float scaleFactorY = getHeight() / (HEIGHT * 1.f) / 2;
-
 //          For the above method to follow, image size should be smaller than device size
 //        else use the value of 1,1 for both
 //        IF THE IMAGE SIZE IS SAME AS THAT OF NEXUS4, ONE CAN EVEN SKIP THE STEPS OF SCALEFACTOR X,Y
@@ -297,11 +281,11 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             if (!disappear) {
                 player.draw(canvas);
             }
-            if (!homescreen) {
-                for (Enemy e : enemy) {
-                    e.draw(canvas);
-                }
+
+            for (Enemy e : enemy) {
+                e.draw(canvas);
             }
+
 
             for (TopBorder tb : topborder) {
                 tb.draw(canvas);
@@ -408,8 +392,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public void newGame() {
 
-        disappear = false;
-
         botborder.clear();
         topborder.clear();
 
@@ -462,9 +444,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             }
         }
-
-        newGameCreated = true;
-
     }
 
     public void drawText(Canvas canvas) {
@@ -478,19 +457,19 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawText("DISTANCE: " + (player.getScore() * 3), 10, HEIGHT - 10, paint);
             if (count == 0) {
                 paint.setColor(Color.GREEN);
-                canvas.drawText("❤❤❤", WIDTH / 2 - 60, HEIGHT - 10, paint);
+                canvas.drawText("❤❤❤", WIDTH / 2 - 65, HEIGHT - 10, paint);
             } else if (count == 1) {
                 paint.setColor(Color.rgb(255, 128, 0));
-                canvas.drawText("❤❤⛶", WIDTH / 2 - 60, HEIGHT - 10, paint);
+                canvas.drawText("❤❤⛶", WIDTH / 2 - 65, HEIGHT - 10, paint);
             } else if (count == 2) {
                 paint.setColor(Color.RED);
-                canvas.drawText("❤⛶⛶", WIDTH / 2 - 60, HEIGHT - 10, paint);
+                canvas.drawText("❤⛶⛶", WIDTH / 2 - 65, HEIGHT - 10, paint);
             } else if (count == 3) {
                 paint.setColor(Color.RED);
-                canvas.drawText("⛶⛶⛶", WIDTH / 2 - 60, HEIGHT - 10, paint);
+                canvas.drawText("⛶⛶⛶", WIDTH / 2 - 65, HEIGHT - 10, paint);
             }
             paint.setColor(Color.WHITE);
-            canvas.drawText("BEST: " + best, WIDTH - 215, HEIGHT - 10, paint);
+            canvas.drawText("BEST: " + best, WIDTH - 250, HEIGHT - 10, paint);
         }
 
 //      When homescreen is displayed

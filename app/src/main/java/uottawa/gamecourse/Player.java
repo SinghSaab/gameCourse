@@ -16,14 +16,12 @@ public class Player extends gameObject {
     private long startTime;
 
     public Player(Bitmap res, int w, int h, int numFrames) {
-
         x = 0;
         y = gamePanel.HEIGHT / 2;
         dy = 0;
         score = 0;
         height = h;
         width = w;
-
         Bitmap[] image = new Bitmap[numFrames];
         spritesheet = res;
 
@@ -34,17 +32,14 @@ public class Player extends gameObject {
         animation.setFrames(image);
         animation.setDelay(40);
         startTime = System.nanoTime();
-
     }
 
-//    This is what will cause the player to move when screen is touched
-
+    //    This is what will cause the player to move when screen is touched
     public void setUp(boolean b) {
         up = b;
     }
 
     public void update() {
-//        Log.d("Player", "update method");
         long elapsed = (System.nanoTime() - startTime) / 1000000;
         if (elapsed > 100) {
             score++;
@@ -52,7 +47,7 @@ public class Player extends gameObject {
         }
         animation.update();
 
-//      Unless homescreen is off, player will be stayed at the middle of screen(check Player.java)
+//      Unless homescreen is off, player will be stayed at the middle of screen
         if (!gamePanel.homescreen) {
             if (up) {
                 dy = (int) (dya -= 0.30);   //ideal is 0.13
