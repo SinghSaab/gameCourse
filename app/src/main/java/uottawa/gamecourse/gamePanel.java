@@ -10,7 +10,6 @@ import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -139,6 +138,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (newGameCreated) {
             newGameCreated = false;
             count = 0;
+            player.resetScore();
             player.setPlaying(true);
         }
 
@@ -239,16 +239,19 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             }
         } else {
 //          There is only 1 case for this execution cycle; when player dies.
-            player.setPlaying(false);
-            player.resetScore();
-            player.resetDYA();
-            enemy.clear();
-            homescreen = true;
-            player.setY(HEIGHT / 2);
-            player.setX(0);
-            startReset = System.nanoTime();
-            newGameCreated = true;
-//          long resetElapsed = (System.nanoTime() - startReset) / 1000000;
+            long resetElapsed = (System.nanoTime() - startReset) / 1000000;
+//          After 1.5 sec, reset the game
+            if (resetElapsed > 1500) {
+                player.setPlaying(false);
+                player.resetScore();
+                player.resetDYA();
+                enemy.clear();
+                homescreen = true;
+                player.setY(HEIGHT / 2);
+                player.setX(0);
+                startReset = System.nanoTime();
+                newGameCreated = true;
+            }
         }
     }
 
@@ -476,15 +479,14 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (homescreen) {
             Paint paint1 = new Paint();
             paint1.setTextSize(50);
-            paint1.setColor(Color.WHITE);
+            paint1.setColor(Color.rgb(220, 20, 5));
             paint1.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD));
             canvas.drawText("PRESS TO START", WIDTH / 2 - 50, HEIGHT / 2, paint1);
 
             paint1.setTextSize(35);
+            paint1.setColor(Color.rgb(239, 206, 11));
             canvas.drawText("PRESS AND HOLD TO GO UP", WIDTH / 2 - 50, HEIGHT / 2 + 45, paint1);
             canvas.drawText("RELEASE TO GO DOWN", WIDTH / 2 - 50, HEIGHT / 2 + 75, paint1);
         }
     }
-
-
 }
