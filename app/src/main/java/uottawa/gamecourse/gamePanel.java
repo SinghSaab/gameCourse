@@ -10,6 +10,7 @@ import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -88,7 +89,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         //Log.d("In surfaceCreated()", "");
 
         bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land));
-        player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 150, 100, 2);
+        player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 279, 84, 3);
         enemy = new ArrayList<Enemy>();
         topborder = new ArrayList<TopBorder>();
         botborder = new ArrayList<BotBorder>();
@@ -297,7 +298,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             for (BotBorder bb : botborder) {
                 bb.draw(canvas);
             }
-            if (started) {
+            if (!player.getPlaying()) {
                 explosion.draw(canvas);
             }
 

@@ -54,6 +54,6 @@ public class Enemy extends gameObject {
     public int getWidth() {
 //  offset slightly for more realistic collision detection
 //        for instance if player touches the back of enemy, it wouldn't die
-        return (width-20);
+        return width;
     }
 }
