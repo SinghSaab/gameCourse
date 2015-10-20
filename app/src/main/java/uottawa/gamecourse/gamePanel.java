@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -66,8 +67,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        //Log.d("In surfaceDestroyed()", "");
-
         boolean retry = true;
         int counter = 0;
         while (retry && counter < 1000) {
@@ -139,8 +138,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (newGameCreated) {
             newGameCreated = false;
             count = 0;
-            player.resetScore();
             player.setPlaying(true);
+            player.resetScore();
         }
 
         if (player.getPlaying()) {
@@ -161,6 +160,18 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             bg.update();
             player.update();
+
+            if (player.getY() < 0) {
+                player.setY(2);
+//                player.setUp(true);
+                player.resetDYA();
+            }
+
+            if (player.getY() > (HEIGHT - 110)) {
+                player.setY(HEIGHT - 112);
+                player.resetDYA();
+//                player.setUp(true);
+            }
 
 //            Calculate the threshold of height based on the score
 //            maxborderheight = 30 + player.getScore() / progressDenom;
