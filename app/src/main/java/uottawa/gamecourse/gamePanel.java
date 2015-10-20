@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -32,32 +31,19 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private Player player;
     private ArrayList<Enemy> enemy;
     private int count = 0;   //no of attacks
-    private ArrayList<TopBorder> topborder;
-    private ArrayList<BotBorder> botborder;
-    private int maxborderheight = 1;
-    private int minborderheight;
-    private boolean topdown = true;
-    private boolean botdown = true;
     private boolean newGameCreated;
     //  increase to slow down difficulty progression
-    private int progressDenom = 20;
-    //
     private Random rand = new Random();
     private Explosion explosion;
-    private long startReset;
-    private boolean reset;
     private boolean disappear;
     private boolean started;
     private int best;
 
     public gamePanel(Context context) {
         super(context);
-
-//        add callback to surface holder to intercept events
+//      add callback to surface holder to intercept events
         getHolder().addCallback(this);
-
-
-//        make gamepanel focusable so that it can handle events
+//      make gamepanel focusable so that it can handle events
         setFocusable(true);
     }
 
@@ -79,52 +65,52 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
+    //    This function is called when the game run for the first time
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        //Log.d("In surfaceCreated()", "");
-
         bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 279, 84, 3);
         enemy = new ArrayList<Enemy>();
-        topborder = new ArrayList<TopBorder>();
-        botborder = new ArrayList<BotBorder>();
         enemyStartTime = System.nanoTime();
-
 //      Instantiate MainThread
         thread = new MainThread(getHolder(), this);
-
 //      We can safely start the game loop
         thread.setRunning(true);
         thread.start();
-
-//      Game didn't used to start at beginning  bcoz waiting for onTouchEvent, hence this will start game automatically
+//      Game didn't used to start at beginning  because waiting for onTouchEvent, hence this will start game automatically
         player.setPlaying(true);
         homescreen = true;
-//      Unless homescreen is off, player will be stayed at the middle of screen(check Player.java)
+//      Unless home-screen is off, player will be stayed at the middle of screen(check Player.java)
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-
+//          When on home-screen, getPlaying() is false; so first click will start game
             if (!player.getPlaying()) {
                 newGameCreated = true;
                 player.setPlaying(true);
                 player.setUp(true);
             }
+//          When game has started or is already running
             if (player.getPlaying()) {
-                if (!started) started = true;
+//              If it's the first click, "reset score counter or continue" function
+                if (!started) {
+//                  player.resetScore() calls; so that the game would not start counting on the home-screen
+                    player.resetScore();
+//                  Depicts game has started and score can be shown on screen
+                    started = true;
+                }
+//              Hides the home-screen now
                 homescreen = false;
+//              Player starts moving up on touch
                 player.setUp(true);
             }
             return true;
         }
-
         if (event.getAction() == MotionEvent.ACTION_UP) {
             player.setUp(false);
             return true;
@@ -132,141 +118,98 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         return super.onTouchEvent(event);
     }
 
+    //  This function keeps on running at each thread
     public void update() {
-//        After an game ends, newGameCreated is set to true; so, this loop tests if reset occurred and then begin new game
-//        Lives regenerated and set setPlaying() to true
+//      Checks if the game has started after player died/first time
         if (newGameCreated) {
+//          Depicts as game in progress
             newGameCreated = false;
+//          Set lives to full
             count = 0;
-            player.setPlaying(true);
+//          Thrash the old score
             player.resetScore();
+//          Player starts playing
+            player.setPlaying(true);
         }
-
+//      Two loops will run; if the player is playing or now
+//      This is the first part of the loop
         if (player.getPlaying()) {
-
-//            if (botborder.isEmpty()) {
-//                //Log.d("In botborder.isEmpty()", "");
-//
-//                player.setPlaying(false);
-//                return;
-//            }
-//
-//            if (topborder.isEmpty()) {
-//                //Log.d("In topborder.isEmpty()", "");
-//
-//                player.setPlaying(false);
-//                return;
-//            }
-
+//          Update the background and player animation
             bg.update();
             player.update();
-
-//            if (player.getY() < 0) {
-//                player.setY(2);
-////                player.setUp(true);
-//                player.resetDYA();
-//            }
-//
-//            if (player.getY() > (HEIGHT - 110)) {
-//                player.setY(HEIGHT - 112);
-//                player.resetDYA();
-////                player.setUp(true);
-//            }
-
-//            Calculate the threshold of height based on the score
-//            maxborderheight = 30 + player.getScore() / progressDenom;
-            maxborderheight = 1;
-//            Calculate max border height so that only 1/2 of screen size could be taken at max by the borders
-            if (maxborderheight > HEIGHT / 4) maxborderheight = HEIGHT / 4;
-//            minborderheight = 5 + player.getScore() / progressDenom;
-            minborderheight = 1;
-
-//            check bottom border collision
-            for (int i = 0; i < botborder.size(); i++) {
-                if (collision(botborder.get(i), player)) {
-                    player.setPlaying(false);     //reset the game; reset changes to true(from beg) to false(at count==3)
-//                    player.setY(HEIGHT - (HEIGHT / 8)); //keep player at the bottom of screen
-
-                }
-            }
-
-//            check top border collision
-            for (int i = 0; i < topborder.size(); i++) {
-                if (collision(topborder.get(i), player))
-                    player.setPlaying(false);
-            }
-
-
-//            Update top border
-            this.updateTopBorder();
-
-//            Update bottom border
-            this.updateBottomBorder();
-
+//          Time to measure enemy placement
             long enemyElapsed = (System.nanoTime() - enemyStartTime) / 1000000;
-
-//          No enemy on home-screen and as score goes higher, less delay between enemy launches
+//          No enemy while home-screen
+//          as score goes higher, less delay between enemy launches
             if (enemyElapsed > (2000 - player.getScore() / 4) && !homescreen) {
-//                first enemy always goes down the middle
+//              first enemy always goes down the middle
                 if (enemy.size() == 0) {
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
                             WIDTH + 10, HEIGHT / 2, 91, 27, player.getScore(), 8));
                 }
-
-//                If first missile if off the screen, start randomizing the location of every other missile
+//              After first missile is added to the screen, start randomizing the location of every other missile
                 else {
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
                             WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
                             91, 27, player.getScore(), 8));
                 }
-
-//                reset timer
+//              reset timer for the enemy to keep track of last enemy added
                 enemyStartTime = System.nanoTime();
             }
-
-//              loop through every missile
+//          loop through every missile to check collisions with the player
             for (int i = 0; i < enemy.size(); i++) {
                 enemy.get(i).update();
-//                detect collision with player
+//              detect collision with player
                 if (collision(enemy.get(i), player)) {
+//                  On collision, remove the particular enemy element
                     enemy.remove(i);
+//                  Increase the no. of the times collision happened
                     ++count;
 /*                    explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.collide),
                                 player.getX(), player.getY() - 30, 151, 100, 4);
                     explosion.update();
                     */
-//                  On 3 collisions, game ends
+//                  On 3 collisions, game will end
                     if (count == 3) {
+//                      Set the best score for the game session; will not save when game gets closed
                         if (best < player.getScore())
                             best = player.getScore();
+//                      Player will stop playing
                         player.setPlaying(false);
+//                      player.resetScore() calls; so that new game would not start counting on the home-screen
+//                      Depicts that game hasn't started yet
+                        started = false;
+//                      Break the loop of collision detection
                         break;
                     }
                 }
-//                else if there is no collision and enemy passes through, we'll remove the obj
+//              else if there is no collision and enemy passes through, we'll remove the enemy object
                 if (enemy.get(i).getX() < -100) {
                     enemy.remove(i);
                     break;
                 }
             }
-        } else {
-//          There is only 1 case for this execution cycle; when player dies.
-            long resetElapsed = (System.nanoTime() - startReset) / 1000000;
-//          After 1.5 sec, reset the game
-            if (resetElapsed > 1500) {
-                player.setPlaying(false);
-                player.resetScore();
-                player.resetDYA();
-                enemy.clear();
-                homescreen = true;
-                player.setY(HEIGHT / 2);
-                player.setX(0);
-                startReset = System.nanoTime();
-                newGameCreated = true;
-            }
+        }
+//      This is the second part of major loop; what to do when player is not playing
+        else {
+//          There is only 1 case for this execution cycle; when player has died
+//          These steps will just reset the game and other parameters
+            player.setPlaying(false);
+            player.resetScore();
+            player.resetDYA();
+//          Clear the remaining enemies off the screen
+            enemy.clear();
+//          Bring the player back to the home-screen
+            homescreen = true;
+//          Set the player in the middle  and at the extreme left
+            player.setY(HEIGHT / 2);
+            player.setX(0);
+//          Set the newGameCreated parameter to depict beginning of a new game or not
+            newGameCreated = true;
         }
     }
 
+    //  Function to detect the collision rectangles
     public boolean collision(gameObject a, gameObject b) {
         if (Rect.intersects(a.getRectangle(), b.getRectangle())) {
             return true;
@@ -274,227 +217,77 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         return false;
     }
 
+    //  Takes control of the canvas and text related drawing
     @Override
     public void draw(Canvas canvas) {
-//      get the width "getWidth()" of the physical device
-//        final float scaleFactorX = getWidth() / (WIDTH * 1.f);
-//        final float scaleFactorY = getHeight() / (HEIGHT * 1.f) / 2;
-//          For the above method to follow, image size should be smaller than device size
-//        else use the value of 1,1 for both
-//        IF THE IMAGE SIZE IS SAME AS THAT OF NEXUS4, ONE CAN EVEN SKIP THE STEPS OF SCALEFACTOR X,Y
-
         if (canvas != null) {
             final int savedState = canvas.save();
-//            Still background drawing
+//          Still background drawing on canvas
             Background bgStill = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_sky));
             bgStill.draw(canvas);
-//            Moving background drawing
-//            canvas.scale(1, scaleFactorY, 0, -550);
-//            canvas.scale(1, 1, 0, 0);
+//          Moving background drawing
+//          get the width "getWidth()" of the physical device
+//          final float scaleFactorX = getWidth() / (WIDTH * 1.f);
+//          final float scaleFactorY = getHeight() / (HEIGHT * 1.f) / 2;
+//          For the above method to follow, image size should be smaller than device size
+//          IF THE IMAGE SIZE IS SAME AS THAT OF NEXUS4, ONE CAN EVEN SKIP THE STEPS OF SCALEFACTOR X,Y
+//          canvas.scale(scaleFactorX, scaleFactorY, 0, -550);
+//                  OR
+//          canvas.scale(1, 1, 0, 0);
             bg.draw(canvas);
             drawText(canvas);
+//          If disappear parameter is false; show the player on canvas (or we can hide the player as well)
             if (!disappear) {
                 player.draw(canvas);
             }
-
+//          Draw the enemy
             for (Enemy e : enemy) {
                 e.draw(canvas);
             }
+//          Can't make use of this till now. Argh!
 
-
-            for (TopBorder tb : topborder) {
-                tb.draw(canvas);
-            }
-
-            for (BotBorder bb : botborder) {
-                bb.draw(canvas);
-            }
             if (!player.getPlaying()) {
                 explosion.draw(canvas);
             }
-
             canvas.restoreToCount(savedState);
         }
-
     }
 
-    public void updateTopBorder() {
-
-//      Every 50 points, insert randomly placed top blocks that breaks the pattern
-
-        if (player.getScore() % 50 == 0) {
-            topborder.add(new TopBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                    topborder.get(topborder.size() - 1).getX() + 20, 0,
-                    (int) ((rand.nextDouble() * (maxborderheight)) + 1)));
-        }
-
-        for (int i = 0; i < topborder.size(); i++) {
-            topborder.get(i).update();
-
-//            if border is moving off screen, add a new one
-            if (topborder.get(i).getX() < -20) {
-                topborder.remove(i);
-
-//                remove element of array list, replace it by adding a new one
-
-//                calculate in which dierection the boreder will be added to
-                if (topborder.get(topborder.size() - 1).getHeight() >= maxborderheight) {
-                    topdown = false;
-                }
-
-                if (topborder.get(topborder.size() - 1).getHeight() <= maxborderheight) {
-                    topdown = true;
-                }
-
-//                new border added with larger height
-                if (topdown) {
-                    topborder.add(new TopBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                            topborder.get(topborder.size() - 1).getX() + 20, 0,
-                            topborder.get(topborder.size() - 1).getHeight() + 1));
-                } else {
-                    topborder.add(new TopBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                            topborder.get(topborder.size() - 1).getX() + 20, 0,
-                            topborder.get(topborder.size() - 1).getHeight() - 1));
-                }
-
-            }
-        }
-
-    }
-
-    public void updateBottomBorder() {
-
-//        every 40 points, insert randomly placed bottom blocks that break pattern
-        if (player.getScore() % 40 == 0) {
-//            botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-//                    botborder.get(botborder.size() - 1).getX() + 20, (int) ((rand.nextDouble() * maxborderheight)) +
-//                    (HEIGHT - maxborderheight)));
-
-            botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                    botborder.get(botborder.size() - 1).getX() + 20, (int) ((rand.nextDouble() * maxborderheight)) +
-                    (HEIGHT - 1)));
-        }
-
-//        update bottom border
-        for (int i = 0; i < botborder.size(); i++) {
-            botborder.get(i).update();
-
-            if (botborder.get(i).getX() < -20) {
-                botborder.remove(i);//                remove element of array list, replace it by adding a new one
-
-//                calculate in which dierection the boreder will be added to
-                if (botborder.get(botborder.size() - 1).getY() <= HEIGHT - maxborderheight) {
-                    botdown = false;
-                }
-
-                if (botborder.get(botborder.size() - 1).getY() >= HEIGHT - maxborderheight) {
-                    botdown = true;
-                }
-
-//                new border added with larger height
-                if (botdown) {
-                    botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                            botborder.get(botborder.size() - 1).getX() + 20,
-                            botborder.get(botborder.size() - 1).getY() + 1));
-                } else {
-                    botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                            botborder.get(botborder.size() - 1).getX() + 20,
-                            botborder.get(botborder.size() - 1).getY() - 1));
-                }
-            }
-        }
-    }
-
-    public void newGame() {
-
-        botborder.clear();
-        topborder.clear();
-
-        enemy.clear();
-
-        minborderheight = 1;
-        maxborderheight = 1;
-
-        player.resetDYA();
-        player.resetScore();
-        player.setY(HEIGHT / 2);
-
-        if (player.getScore() > best) {
-            best = player.getScore();
-        }
-
-//        create initial top borders
-        for (int i = 0; i * 20 < WIDTH + 40; i++) {
-
-            if (i == 0) {
-                topborder.add(new TopBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick), i * 20, 0, 0));
-            } else {
-                topborder.add(new TopBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                        i * 20, 0, topborder.get(i - 1).getHeight() + 1));
-
-            }
-        }
-
-        //        create initial bottom borders
-
-        for (int i = 0; i * 20 < WIDTH + 40; i++) {
-
-//first border created
-            if (i == 0) {
-//                botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-//                        i * 20, HEIGHT - minborderheight));
-
-                botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                        i * 20, HEIGHT - 1));
-            }
-
-//adding borders until the initial screen is full
-
-            else {
-//                botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-//                        i * 20, botborder.get(i - 1).getY() - 1));
-
-                botborder.add(new BotBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
-                        i * 20, HEIGHT - 1));
-
-            }
-        }
-    }
-
+    //  This is used to create the home screen
     public void drawText(Canvas canvas) {
-
-//      When homescreen is not displayed
+//      When home screen is not displayed, show the game data (lives, score, best score)
         if (!homescreen) {
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
             paint.setTextSize(30);
             paint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
             canvas.drawText("DISTANCE: " + (player.getScore() * 3), 10, HEIGHT - 10, paint);
+//          Depending upon the collisions, Lives color will change in the shape of heart
             if (count == 0) {
                 paint.setColor(Color.GREEN);
                 canvas.drawText("❤❤❤", WIDTH / 2 - 65, HEIGHT - 10, paint);
             } else if (count == 1) {
+//              This is for orange color
                 paint.setColor(Color.rgb(255, 128, 0));
                 canvas.drawText("❤❤⛶", WIDTH / 2 - 65, HEIGHT - 10, paint);
             } else if (count == 2) {
                 paint.setColor(Color.RED);
                 canvas.drawText("❤⛶⛶", WIDTH / 2 - 65, HEIGHT - 10, paint);
             } else if (count == 3) {
-                paint.setColor(Color.RED);
+                paint.setColor(Color.LTGRAY);
                 canvas.drawText("⛶⛶⛶", WIDTH / 2 - 65, HEIGHT - 10, paint);
             }
             paint.setColor(Color.WHITE);
             canvas.drawText("BEST: " + best, WIDTH - 250, HEIGHT - 10, paint);
         }
 
-//      When homescreen is displayed
+//      When homescreen is displayed, Show the instructions/controls
         if (homescreen) {
             Paint paint1 = new Paint();
             paint1.setTextSize(50);
             paint1.setColor(Color.rgb(220, 20, 5));
             paint1.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD));
             canvas.drawText("PRESS TO START", WIDTH / 2 - 50, HEIGHT / 2, paint1);
-
             paint1.setTextSize(35);
             paint1.setColor(Color.rgb(239, 206, 11));
             canvas.drawText("PRESS AND HOLD TO GO UP", WIDTH / 2 - 50, HEIGHT / 2 + 45, paint1);

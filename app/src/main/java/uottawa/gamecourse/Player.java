@@ -53,7 +53,7 @@ public class Player extends gameObject {
                 dy = (int) (dya -= 0.30);   //ideal is 0.13
 //            The acceleration with which the player will do up
 
-            } else if (!up && y < (gamePanel.HEIGHT - 118)) {
+            } else if (!up && y < (gamePanel.HEIGHT - 125)) {
                 dy = (int) (dya += 0.15);
 //            The acceleration with which the player will do down
             } else {
