@@ -161,17 +161,17 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             bg.update();
             player.update();
 
-            if (player.getY() < 0) {
-                player.setY(2);
-//                player.setUp(true);
-                player.resetDYA();
-            }
-
-            if (player.getY() > (HEIGHT - 110)) {
-                player.setY(HEIGHT - 112);
-                player.resetDYA();
-//                player.setUp(true);
-            }
+//            if (player.getY() < 0) {
+//                player.setY(2);
+////                player.setUp(true);
+//                player.resetDYA();
+//            }
+//
+//            if (player.getY() > (HEIGHT - 110)) {
+//                player.setY(HEIGHT - 112);
+//                player.resetDYA();
+////                player.setUp(true);
+//            }
 
 //            Calculate the threshold of height based on the score
 //            maxborderheight = 30 + player.getScore() / progressDenom;

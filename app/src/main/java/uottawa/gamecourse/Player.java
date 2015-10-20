@@ -49,13 +49,16 @@ public class Player extends gameObject {
 
 //      Unless homescreen is off, player will be stayed at the middle of screen
         if (!gamePanel.homescreen) {
-            if (up) {
+            if (up && y > 5) {
                 dy = (int) (dya -= 0.30);   //ideal is 0.13
 //            The acceleration with which the player will do up
 
-            } else {
+            } else if (!up && y < (gamePanel.HEIGHT - 118)) {
                 dy = (int) (dya += 0.15);
 //            The acceleration with which the player will do down
+            } else {
+                dy = 0;
+                dya = 0;
             }
 
             if (dy > 8) dy = 8;
