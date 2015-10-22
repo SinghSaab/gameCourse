@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -42,6 +41,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private boolean disappear;
     private boolean started;
     private int best;
+    private boolean lifePower = false;
 
     public gamePanel(Context context) {
         super(context);
@@ -171,13 +171,20 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             player.update();
 //          Time to measure enemy placement
             long enemyElapsed = (System.nanoTime() - enemyStartTime) / 1000000;
-//          No enemy while home-screen
-//          as score goes higher, less delay between enemy launches
+//          No enemy while home-screen; As score goes higher, less delay between enemy launches
             if (enemyElapsed > (2000 - player.getScore() / 4) && !homescreen) {
 //              first enemy always goes down the middle
+//              enemy.size() gives the no. of enemies on the canvas at a time
                 if (enemy.size() == 0) {
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
                             WIDTH + 10, HEIGHT / 2, 91, 27, player.getScore(), 8));
+//              Because of delay in processing, need to mention a limit rather than a single value as it may
+//              not take the action at the exact value
+                } else if (player.getScore() % rand.nextInt(100) == 0) {
+                    lifePower = true;
+                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.powerup_heart),
+                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
+                            50, 33, player.getScore(), 8));
                 }
 //              After first missile is added to the screen, start randomizing the location of every other missile
                 else {
@@ -195,24 +202,25 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 if (collision(enemy.get(i), player)) {
 //                  On collision, remove the particular enemy element
                     enemy.remove(i);
+                    if (lifePower && count > 0) {
+                        --count;
+                        lifePower = false;
+                    } else if (!lifePower) {
 //                  Increase the no. of the times collision happened
-                    ++count;
-/*                    explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.collide),
-                                player.getX(), player.getY() - 30, 151, 100, 4);
-                    explosion.update();
-                    */
+                        ++count;
 //                  On 3 collisions, game will end
-                    if (count == 3) {
+                        if (count == 3) {
 //                      Set the best score for the game session; will not save when game gets closed
-                        if (best < player.getScore())
-                            best = player.getScore();
+                            if (best < player.getScore())
+                                best = player.getScore();
 //                      Player will stop playing
-                        player.setPlaying(false);
+                            player.setPlaying(false);
 //                      player.resetScore() calls; so that new game would not start counting on the home-screen
 //                      Depicts that game hasn't started yet
-                        started = false;
+                            started = false;
 //                      Break the loop of collision detection
-                        break;
+                            break;
+                        }
                     }
                 }
 //              else if there is no collision and enemy passes through, we'll remove the enemy object
