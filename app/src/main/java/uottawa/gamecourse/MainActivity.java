@@ -47,6 +47,4 @@ public class MainActivity extends Activity {
 
         return super.onOptionsItemSelected(item);
     }
-
-    //    When Closing the application, confirmation dialog box appears
 }

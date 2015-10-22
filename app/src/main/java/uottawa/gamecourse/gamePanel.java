@@ -3,15 +3,18 @@ package uottawa.gamecourse;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -23,7 +26,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 768;
-    public static final int MOVESPEED = -8;
+    public static int MOVESPEED = -8;
     public static boolean homescreen = false;
     private long enemyStartTime;
     private long enemyElapsed;
@@ -54,6 +57,11 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
+//      Write best score to the shared preference
+        SharedPreferences bestScore = getContext().getSharedPreferences("bestScore", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = bestScore.edit();
+        editor.putInt("bestScore", best);
+        editor.apply();
         boolean retry = true;
         int counter = 0;
         while (retry && counter < 1000) {
@@ -73,7 +81,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land));
-        player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 279, 84, 3);
+        player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 280, 85, 3);
         enemy = new ArrayList<Enemy>();
         enemyStartTime = System.nanoTime();
 //      Instantiate MainThread
@@ -84,6 +92,10 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //      Game didn't used to start at beginning  because waiting for onTouchEvent, hence this will start game automatically
         player.setPlaying(true);
         homescreen = true;
+//      Read best score from the shared preference
+        SharedPreferences sharedPref = getContext().getSharedPreferences("bestScore", Context.MODE_PRIVATE);
+        int defaultValue = 0;
+        best = sharedPref.getInt("bestScore", defaultValue);
 //      Unless home-screen is off, player will be stayed at the middle of screen(check Player.java)
     }
 
@@ -214,7 +226,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         else {
 //          There is only 1 case for this execution cycle; when player has died
 //          These steps will just reset the game and other parameters
-            player.setPlaying(false);
             player.resetScore();
             player.resetDYA();
 //          Clear the remaining enemies off the screen

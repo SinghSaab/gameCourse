@@ -22,10 +22,10 @@ public class Enemy extends gameObject {
         height = h;
         score = s;
 
-        speed = 7 + (int) (rand.nextDouble() * score / 30);
+        speed = -gamePanel.MOVESPEED + (int) (rand.nextDouble() * score / 30);
 
 //        cap missile speed
-        if (speed >= 40) speed = 40;
+        if (speed >= 40 - gamePanel.MOVESPEED) speed = 40 - gamePanel.MOVESPEED;
 
         Bitmap[] image = new Bitmap[numFrames];
         spritesheet = res;
@@ -46,14 +46,13 @@ public class Enemy extends gameObject {
     public void draw(Canvas canvas) {
         try {
             canvas.drawBitmap(animation.getImage(), x, y, null);
-        }catch (Exception e){}
+        } catch (Exception e) {
+        }
     }
 
     @Override
 
     public int getWidth() {
-//  offset slightly for more realistic collision detection
-//        for instance if player touches the back of enemy, it wouldn't die
         return width;
     }
 }
