@@ -41,7 +41,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private boolean disappear;
     private boolean started;
     private int best;
-    private boolean lifePower = false;
+    private int lifePower;
 
     public gamePanel(Context context) {
         super(context);
@@ -176,12 +176,17 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //              first enemy always goes down the middle
 //              enemy.size() gives the no. of enemies on the canvas at a time
                 if (enemy.size() == 0) {
-                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
-                            WIDTH + 10, HEIGHT / 2, 91, 27, player.getScore(), 8));
+
+                    lifePower = 1;
+                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.powerup_heart),
+                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
+                            50, 33, player.getScore(), 8));
+//                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
+//                            WIDTH + 10, HEIGHT / 2, 91, 27, player.getScore(), 8));
 //              Because of delay in processing, need to mention a limit rather than a single value as it may
 //              not take the action at the exact value
                 } else if (player.getScore() % rand.nextInt(100) == 0) {
-                    lifePower = true;
+                    lifePower = 1;
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.powerup_heart),
                             WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
                             50, 33, player.getScore(), 8));
@@ -202,10 +207,12 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 if (collision(enemy.get(i), player)) {
 //                  On collision, remove the particular enemy element
                     enemy.remove(i);
-                    if (lifePower && count > 0) {
+//                  If the element is a powerup or not
+                    if (lifePower == 1 && count > 0) {
+//                      If element is powerup and life <=2; increases life
                         --count;
-                        lifePower = false;
-                    } else if (!lifePower) {
+                        lifePower = 0;
+                    } else if (lifePower == 0) {
 //                  Increase the no. of the times collision happened
                         ++count;
 //                  On 3 collisions, game will end
@@ -222,10 +229,12 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                             break;
                         }
                     }
+                    lifePower = 0;
                 }
 //              else if there is no collision and enemy passes through, we'll remove the enemy object
                 if (enemy.get(i).getX() < -100) {
                     enemy.remove(i);
+                    lifePower = 0;
                     break;
                 }
             }
