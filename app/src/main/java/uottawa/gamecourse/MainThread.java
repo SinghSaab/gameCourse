@@ -1,6 +1,8 @@
 package uottawa.gamecourse;
 
 import android.graphics.Canvas;
+import android.preference.PreferenceManager;
+import android.preference.PreferenceManager.OnActivityDestroyListener;
 import android.view.SurfaceHolder;
 
 /**

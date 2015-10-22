@@ -49,6 +49,8 @@ public class Player extends gameObject {
 
 //      Unless homescreen is off, player will be stayed at the middle of screen
         if (!gamePanel.homescreen) {
+//          This will test that player doesn't cross the top of screen
+//          Although if the acceleration is enough, the player can cross the screen as first condition can be skipped
             if (up && y > 5) {
                 dy = (int) (dya -= 0.30);   //ideal is 0.13
 //            The acceleration with which the player will do up

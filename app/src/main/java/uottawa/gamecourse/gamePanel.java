@@ -10,7 +10,6 @@ import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -22,7 +21,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 768;
-    public static final int MOVESPEED = -5;
+    public static final int MOVESPEED = -8;
     public static boolean homescreen = false;
     private long enemyStartTime;
     private long enemyElapsed;
@@ -294,4 +293,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawText("RELEASE TO GO DOWN", WIDTH / 2 - 50, HEIGHT / 2 + 75, paint1);
         }
     }
+
+
 }
