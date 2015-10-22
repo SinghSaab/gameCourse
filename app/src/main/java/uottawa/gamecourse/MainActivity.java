@@ -49,24 +49,4 @@ public class MainActivity extends Activity {
     }
 
     //    When Closing the application, confirmation dialog box appears
-    @Override
-    public void onBackPressed() {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-        alertDialog.setTitle("Leave me flying?");
-        alertDialog.setMessage("Exit such an exciting game?");
-        alertDialog.setPositiveButton("YES",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-        alertDialog.setNegativeButton("NO",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-        alertDialog.create();
-        alertDialog.show();
-    }
 }

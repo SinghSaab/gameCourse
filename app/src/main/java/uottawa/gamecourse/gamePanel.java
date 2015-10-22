@@ -1,6 +1,8 @@
 package uottawa.gamecourse;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -113,6 +115,25 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (event.getAction() == MotionEvent.ACTION_UP) {
             player.setUp(false);
             return true;
+        }
+        if (event.getAction() == MotionEvent.BUTTON_BACK) {
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
+            alertDialog.setTitle("Leave me flying?");
+            alertDialog.setMessage("Exit such an exciting game?");
+            alertDialog.setPositiveButton("YES",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            surfaceDestroyed(getHolder());
+                        }
+                    });
+            alertDialog.setNegativeButton("NO",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+            alertDialog.create();
+            alertDialog.show();
         }
         return super.onTouchEvent(event);
     }
