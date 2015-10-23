@@ -25,14 +25,21 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 768;
-    public static int MOVESPEED = -8;
+    public static int MOVESPEED = -5;
     public static boolean homescreen = false;
     private long enemyStartTime;
     private long enemyElapsed;
+
+    private long powerupElapsed;
+    private long powerupStartTime;
+
     private MainThread thread;
     private Background bg;
     private Player player;
     private ArrayList<Enemy> enemy;
+
+    private ArrayList<Powerups> powerup;
+
     private int count = 0;   //no of attacks
     private boolean newGameCreated;
     //  increase to slow down difficulty progression
@@ -80,10 +87,15 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     //    This function is called when the game run for the first time
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land));
+        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land),
+                BitmapFactory.decodeResource(getResources(), R.drawable.watermark));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 280, 85, 3);
         enemy = new ArrayList<Enemy>();
         enemyStartTime = System.nanoTime();
+
+        powerup = new ArrayList<Powerups>();
+        powerupStartTime = System.nanoTime();
+
 //      Instantiate MainThread
         thread = new MainThread(getHolder(), this);
 //      We can safely start the game loop
@@ -169,6 +181,40 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //          Update the background and player animation
             bg.update();
             player.update();
+
+            powerupElapsed = (System.nanoTime() - powerupStartTime) / 1000000;
+
+            if (!homescreen && powerupElapsed > (10000 + player.getScore() / 2) && player.getScore() > 250) {
+                powerup.add(new Powerups(BitmapFactory.decodeResource(getResources(), R.drawable.powerup_heart),
+                        WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 10))),
+                        50, 33, player.getScore(), 8));
+                powerupStartTime = System.nanoTime();
+
+            }
+
+//            loop through every powerup to check collisions with the player
+            for (int i = 0; i < powerup.size(); i++) {
+                powerup.get(i).update();
+//              detect collision with player
+                if (collision(powerup.get(i), player)) {
+//                  On collision, remove the particular enemy element
+                    powerup.remove(i);
+//                  If the element is a powerup or not
+                    if (count > 0 && count < 3) {
+//                      If element is powerup and life <=2; increases life
+                        --count;
+                    } else {
+                        break;
+                    }
+//              else if there is no collision and enemy passes through, we'll remove the enemy object
+                    if (powerup.get(i).getX() < -100) {
+                        powerup.remove(i);
+                        break;
+                    }
+                }
+            }
+
+
 //          Time to measure enemy placement
             long enemyElapsed = (System.nanoTime() - enemyStartTime) / 1000000;
 //          No enemy while home-screen; As score goes higher, less delay between enemy launches
@@ -176,20 +222,10 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //              first enemy always goes down the middle
 //              enemy.size() gives the no. of enemies on the canvas at a time
                 if (enemy.size() == 0) {
-
-                    lifePower = 1;
-                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.powerup_heart),
-                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
-                            50, 33, player.getScore(), 8));
-//                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
-//                            WIDTH + 10, HEIGHT / 2, 91, 27, player.getScore(), 8));
+                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
+                            WIDTH + 10, HEIGHT / 2, 91, 27, player.getScore(), 8));
 //              Because of delay in processing, need to mention a limit rather than a single value as it may
 //              not take the action at the exact value
-                } else if (player.getScore() % rand.nextInt(100) == 0) {
-                    lifePower = 1;
-                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.powerup_heart),
-                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
-                            50, 33, player.getScore(), 8));
                 }
 //              After first missile is added to the screen, start randomizing the location of every other missile
                 else {
@@ -207,34 +243,25 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 if (collision(enemy.get(i), player)) {
 //                  On collision, remove the particular enemy element
                     enemy.remove(i);
-//                  If the element is a powerup or not
-                    if (lifePower == 1 && count > 0) {
-//                      If element is powerup and life <=2; increases life
-                        --count;
-                        lifePower = 0;
-                    } else if (lifePower == 0) {
 //                  Increase the no. of the times collision happened
-                        ++count;
+                    ++count;
 //                  On 3 collisions, game will end
-                        if (count == 3) {
+                    if (count == 3) {
 //                      Set the best score for the game session; will not save when game gets closed
-                            if (best < player.getScore())
-                                best = player.getScore();
+                        if (best < player.getScore())
+                            best = player.getScore();
 //                      Player will stop playing
-                            player.setPlaying(false);
+                        player.setPlaying(false);
 //                      player.resetScore() calls; so that new game would not start counting on the home-screen
 //                      Depicts that game hasn't started yet
-                            started = false;
+                        started = false;
 //                      Break the loop of collision detection
-                            break;
-                        }
+                        break;
                     }
-                    lifePower = 0;
                 }
 //              else if there is no collision and enemy passes through, we'll remove the enemy object
                 if (enemy.get(i).getX() < -100) {
                     enemy.remove(i);
-                    lifePower = 0;
                     break;
                 }
             }
@@ -247,6 +274,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             player.resetDYA();
 //          Clear the remaining enemies off the screen
             enemy.clear();
+            powerup.clear();
 //          Bring the player back to the home-screen
             homescreen = true;
 //          Set the player in the middle  and at the extreme left
@@ -270,9 +298,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void draw(Canvas canvas) {
         if (canvas != null) {
             final int savedState = canvas.save();
-//          Still background drawing on canvas
-            Background bgStill = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_sky));
-            bgStill.draw(canvas);
 //          Moving background drawing
 //          get the width "getWidth()" of the physical device
 //          final float scaleFactorX = getWidth() / (WIDTH * 1.f);
@@ -291,6 +316,10 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //          Draw the enemy
             for (Enemy e : enemy) {
                 e.draw(canvas);
+            }
+//          Draw the powerup
+            for (Powerups p : powerup) {
+                p.draw(canvas);
             }
 //          Can't make use of this till now. Argh!
 

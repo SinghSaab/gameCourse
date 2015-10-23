@@ -12,8 +12,8 @@ public class Background {
     private Bitmap imageAtRest;
     private int x, y, dx;
 
-    public Background(Bitmap res) {
-//        imageAtRest = resAtRest;
+    public Background(Bitmap res, Bitmap resAtRest) {
+        imageAtRest = resAtRest;
         imageMoving = res;
         dx = gamePanel.MOVESPEED;
     }
@@ -25,6 +25,7 @@ public class Background {
     }
 
     public void draw(Canvas canvas) {
+        canvas.drawBitmap(imageAtRest, 0, 0, null);
         canvas.drawBitmap(imageMoving, x, y, null);
         if (x < 0) {
             canvas.drawBitmap(imageMoving, x + gamePanel.WIDTH, y, null);
