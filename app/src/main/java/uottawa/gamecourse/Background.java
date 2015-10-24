@@ -2,6 +2,7 @@ package uottawa.gamecourse;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.util.Log;
 
 /**
  * Created by Administrator on 2015-08-15.

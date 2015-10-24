@@ -1,6 +1,7 @@
 package uottawa.gamecourse;
 
 import android.app.AlertDialog;
+import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -13,9 +14,10 @@ import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
 import java.util.ArrayList;
 import java.util.Random;
+
+import android.os.Vibrator;
 
 /**
  * Created by Administrator on 2015-08-15.
@@ -25,7 +27,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 768;
-    public static int MOVESPEED = -5;
+    public static int MOVESPEED = -7;
     public static boolean homescreen = false;
     private long enemyStartTime;
     private long enemyElapsed;
@@ -48,7 +50,6 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private boolean disappear;
     private boolean started;
     private int best;
-    private int lifePower;
 
     public gamePanel(Context context) {
         super(context);
@@ -69,6 +70,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         SharedPreferences.Editor editor = bestScore.edit();
         editor.putInt("bestScore", best);
         editor.apply();
+//      Close the thread when game is ended
         boolean retry = true;
         int counter = 0;
         while (retry && counter < 1000) {
@@ -182,6 +184,11 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             bg.update();
             player.update();
 
+            if (player.getY() == HEIGHT - 128) {
+                Vibrator v = (Vibrator) this.getContext().getSystemService(Context.VIBRATOR_SERVICE);
+                v.vibrate(10);
+            }
+
             powerupElapsed = (System.nanoTime() - powerupStartTime) / 1000000;
 
             if (!homescreen && powerupElapsed > (10000 + player.getScore() / 2) && player.getScore() > 250) {
@@ -222,16 +229,14 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //              first enemy always goes down the middle
 //              enemy.size() gives the no. of enemies on the canvas at a time
                 if (enemy.size() == 0) {
-                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
-                            WIDTH + 10, HEIGHT / 2, 91, 27, player.getScore(), 8));
-//              Because of delay in processing, need to mention a limit rather than a single value as it may
-//              not take the action at the exact value
+                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
+                            WIDTH + 10, HEIGHT / 2, 100, 30, player.getScore(), 8));
                 }
 //              After first missile is added to the screen, start randomizing the location of every other missile
                 else {
-                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.flame),
+                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
                             WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
-                            91, 27, player.getScore(), 8));
+                            100, 30, player.getScore(), 8));
                 }
 //              reset timer for the enemy to keep track of last enemy added
                 enemyStartTime = System.nanoTime();
@@ -338,7 +343,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             paint.setColor(Color.WHITE);
             paint.setTextSize(30);
             paint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
-            canvas.drawText("DISTANCE: " + (player.getScore() * 3), 10, HEIGHT - 10, paint);
+            canvas.drawText("DISTANCE: " + (player.getScore()), 10, HEIGHT - 10, paint);
 //          Depending upon the collisions, Lives color will change in the shape of heart
             if (count == 0) {
                 paint.setColor(Color.GREEN);
@@ -371,6 +376,4 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawText("RELEASE TO GO DOWN", WIDTH / 2 - 50, HEIGHT / 2 + 75, paint1);
         }
     }
-
-
 }

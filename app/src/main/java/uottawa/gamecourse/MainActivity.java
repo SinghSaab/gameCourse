@@ -17,10 +17,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 //        Turn off title
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-
 //        Set to Full Screen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
 //        Change R.layout.activity_main(XML File) to set a new panel(Java Class) for where game would be running
         setContentView(new gamePanel(this));
     }
