@@ -1,8 +1,6 @@
 package uottawa.gamecourse;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -145,23 +143,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             return true;
         }
         if (event.getAction() == MotionEvent.BUTTON_BACK) {
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
-            alertDialog.setTitle("Leave me flying?");
-            alertDialog.setMessage("Exit such an exciting game?");
-            alertDialog.setPositiveButton("YES",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            surfaceDestroyed(getHolder());
-                        }
-                    });
-            alertDialog.setNegativeButton("NO",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    });
-            alertDialog.create();
-            alertDialog.show();
+
         }
         return super.onTouchEvent(event);
     }
@@ -237,11 +219,16 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 }
 //              After first missile is added to the screen, start randomizing the location of every other missile
                 else {
-                    enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
-                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
-                            100, 30, player.getScore(), 8));
-                    troll.add(new TrollEnemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
-                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))), 100, 30, player.getScore(), 8));
+                    int toTrollOrNot = rand.nextInt(10);
+                    if (toTrollOrNot % 2 == 0) {
+                        enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
+                                WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
+                                100, 30, player.getScore(), 8));
+                    } else {
+                        troll.add(new TrollEnemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
+                                WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))), 100, 30, player.getScore(), 8,
+                                player));
+                    }
                 }
 //              reset timer for the enemy to keep track of last enemy added
                 enemyStartTime = System.nanoTime();
@@ -250,16 +237,33 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //          loop through every troll missile to check collisions with the player
             for (int i = 0; i < troll.size(); i++) {
                 troll.get(i).update();
+                if (collision(troll.get(i), player)) {
+//                  On collision, remove the particular troll element
+                    troll.remove(i);
+//                  Increase the no. of the times collision happened
+                    ++count;
+//                  On 3 collisions, game will end
+                    if (count == 3) {
+//                      Set the best score for the game session; will not save when game gets closed
+                        if (best < player.getScore())
+                            best = player.getScore();
+//                      Player will stop playing
+                        player.setPlaying(false);
+//                      player.resetScore() calls; so that new game would not start counting on the home-screen
+//                      Depicts that game hasn't started yet
+                        started = false;
+//                      Break the loop of collision detection
+                        break;
+                    }
+                }
                 if (troll.get(i).getX() < -100) {
                     troll.remove(i);
                     break;
                 }
-
             }
+
             for (int i = 0; i < enemy.size(); i++) {
                 enemy.get(i).update();
-
-
 //              detect collision with player
                 if (collision(enemy.get(i), player)) {
 //                  On collision, remove the particular enemy element
