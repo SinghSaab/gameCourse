@@ -1,7 +1,6 @@
 package uottawa.gamecourse;
 
 import android.app.AlertDialog;
-import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -11,13 +10,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.os.Vibrator;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
 import java.util.ArrayList;
 import java.util.Random;
-
-import android.os.Vibrator;
 
 /**
  * Created by Administrator on 2015-08-15.
@@ -39,6 +38,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private Background bg;
     private Player player;
     private ArrayList<Enemy> enemy;
+
+    private ArrayList<TrollEnemy> troll;
 
     private ArrayList<Powerups> powerup;
 
@@ -93,6 +94,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 BitmapFactory.decodeResource(getResources(), R.drawable.watermark));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 280, 85, 3);
         enemy = new ArrayList<Enemy>();
+        troll = new ArrayList<TrollEnemy>();
         enemyStartTime = System.nanoTime();
 
         powerup = new ArrayList<Powerups>();
@@ -186,7 +188,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             if (player.getY() == HEIGHT - 128) {
                 Vibrator v = (Vibrator) this.getContext().getSystemService(Context.VIBRATOR_SERVICE);
-                v.vibrate(10);
+                v.vibrate(5);
             }
 
             powerupElapsed = (System.nanoTime() - powerupStartTime) / 1000000;
@@ -227,23 +229,37 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //          No enemy while home-screen; As score goes higher, less delay between enemy launches
             if (enemyElapsed > (2000 - player.getScore() / 4) && !homescreen) {
 //              first enemy always goes down the middle
-//              enemy.size() gives the no. of enemies on the canvas at a time
                 if (enemy.size() == 0) {
+//                  enemy.size() gives the no. of enemies on the canvas at a time
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
                             WIDTH + 10, HEIGHT / 2, 100, 30, player.getScore(), 8));
+
                 }
 //              After first missile is added to the screen, start randomizing the location of every other missile
                 else {
                     enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
                             WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
                             100, 30, player.getScore(), 8));
+                    troll.add(new TrollEnemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
+                            WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))), 100, 30, player.getScore(), 8));
                 }
 //              reset timer for the enemy to keep track of last enemy added
                 enemyStartTime = System.nanoTime();
             }
-//          loop through every missile to check collisions with the player
+
+//          loop through every troll missile to check collisions with the player
+            for (int i = 0; i < troll.size(); i++) {
+                troll.get(i).update();
+                if (troll.get(i).getX() < -100) {
+                    troll.remove(i);
+                    break;
+                }
+
+            }
             for (int i = 0; i < enemy.size(); i++) {
                 enemy.get(i).update();
+
+
 //              detect collision with player
                 if (collision(enemy.get(i), player)) {
 //                  On collision, remove the particular enemy element
@@ -279,6 +295,9 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
             player.resetDYA();
 //          Clear the remaining enemies off the screen
             enemy.clear();
+
+            troll.clear();
+
             powerup.clear();
 //          Bring the player back to the home-screen
             homescreen = true;
@@ -325,6 +344,9 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //          Draw the powerup
             for (Powerups p : powerup) {
                 p.draw(canvas);
+            }
+            for (TrollEnemy te : troll) {
+                te.draw(canvas);
             }
 //          Can't make use of this till now. Argh!
 
