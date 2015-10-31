@@ -5,6 +5,8 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceManager.OnActivityDestroyListener;
 import android.view.SurfaceHolder;
 
+import java.util.Objects;
+
 /**
  * Created by Administrator on 2015-08-15.
  */

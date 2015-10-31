@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.media.MediaPlayer;
 import android.os.Vibrator;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -50,6 +51,11 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private boolean started;
     private int best;
 
+    private MediaPlayer mplayer_explosion;
+    private MediaPlayer mplayer_death;
+    private MediaPlayer mplayer_powerup;
+
+
     public gamePanel(Context context) {
         super(context);
 //      add callback to surface holder to intercept events
@@ -69,6 +75,11 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         SharedPreferences.Editor editor = bestScore.edit();
         editor.putInt("bestScore", best);
         editor.apply();
+
+        mplayer_death.release();
+        mplayer_explosion.release();
+        mplayer_powerup.release();
+
 //      Close the thread when game is ended
         boolean retry = true;
         int counter = 0;
@@ -111,6 +122,10 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         int defaultValue = 0;
         best = sharedPref.getInt("bestScore", defaultValue);
 //      Unless home-screen is off, player will be stayed at the middle of screen(check Player.java)
+
+        mplayer_death = MediaPlayer.create(getContext(), R.raw.death);
+        mplayer_explosion = MediaPlayer.create(getContext(), R.raw.hit);
+        mplayer_powerup = MediaPlayer.create(getContext(), R.raw.powerup);
     }
 
     @Override
@@ -150,6 +165,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     //  This function keeps on running at each thread
     public void update() {
+
 //      Checks if the game has started after player died/first time
         if (newGameCreated) {
 //          Depicts as game in progress
@@ -188,6 +204,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 powerup.get(i).update();
 //              detect collision with player
                 if (collision(powerup.get(i), player)) {
+                    mplayer_powerup.start();
 //                  On collision, remove the particular enemy element
                     powerup.remove(i);
 //                  If the element is a powerup or not
@@ -197,11 +214,13 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     } else {
                         break;
                     }
+                    if (!mplayer_powerup.isPlaying())
+                        mplayer_powerup.stop();
+                }
 //              else if there is no collision and enemy passes through, we'll remove the enemy object
-                    if (powerup.get(i).getX() < -100) {
-                        powerup.remove(i);
-                        break;
-                    }
+                if (powerup.get(i).getX() < -100) {
+                    powerup.remove(i);
+                    break;
                 }
             }
 
@@ -239,6 +258,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 troll.get(i).update();
                 if (collision(troll.get(i), player)) {
 //                  On collision, remove the particular troll element
+                    mplayer_explosion.start();
                     troll.remove(i);
 //                  Increase the no. of the times collision happened
                     ++count;
@@ -255,6 +275,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //                      Break the loop of collision detection
                         break;
                     }
+                    if (!mplayer_explosion.isPlaying())
+                        mplayer_explosion.stop();
                 }
                 if (troll.get(i).getX() < -100) {
                     troll.remove(i);
@@ -266,6 +288,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 enemy.get(i).update();
 //              detect collision with player
                 if (collision(enemy.get(i), player)) {
+                    mplayer_explosion.start();
 //                  On collision, remove the particular enemy element
                     enemy.remove(i);
 //                  Increase the no. of the times collision happened
@@ -283,6 +306,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //                      Break the loop of collision detection
                         break;
                     }
+                    if (!mplayer_explosion.isPlaying())
+                        mplayer_explosion.stop();
                 }
 //              else if there is no collision and enemy passes through, we'll remove the enemy object
                 if (enemy.get(i).getX() < -100) {

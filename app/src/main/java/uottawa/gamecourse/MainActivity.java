@@ -5,14 +5,10 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceHolder;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
@@ -32,6 +28,7 @@ public class MainActivity extends Activity {
         mplayer = MediaPlayer.create(this, R.raw.bgmusic);
         mplayer.setLooping(true);
         mplayer.start();
+        mplayer.setVolume((float) 0.3, (float) 0.3);
     }
 
     @Override
@@ -49,7 +46,6 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
-        Log.d("onPause called", "");
         mplayer.pause();
         super.onPause();
 

@@ -47,10 +47,10 @@ public class TrollEnemy extends gameObject {
         x -= speed;
         followPlayer = playerInstance.getY();
         if (y > 0 && y < followPlayer) {
-            y += 3;
+            y += 3 + (speed / 10);
         }
         if (y < gamePanel.HEIGHT - 127 && y > followPlayer) {
-            y -= 3;
+            y -= 3 + (speed / 10);
         }
         animation.update();
     }
