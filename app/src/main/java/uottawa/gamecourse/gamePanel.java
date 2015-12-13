@@ -27,6 +27,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public static final int HEIGHT = 768;
     public static int MOVESPEED = -7;
     public static boolean homescreen = false;
+    public static int followPlayer_prev;
     private long enemyStartTime;
     private long enemyElapsed;
 
@@ -51,6 +52,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private boolean started;
     private int best;
 
+    private MediaPlayer mplayer_background;
     private MediaPlayer mplayer_explosion;
     private MediaPlayer mplayer_death;
     private MediaPlayer mplayer_powerup;
@@ -76,6 +78,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         editor.putInt("bestScore", best);
         editor.apply();
 
+        mplayer_background.stop();
+        mplayer_background.release();
         mplayer_death.release();
         mplayer_explosion.release();
         mplayer_powerup.release();
@@ -100,7 +104,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.night_land),
-                BitmapFactory.decodeResource(getResources(), R.drawable.watermark));
+                BitmapFactory.decodeResource(getResources(), R.drawable.night_sky));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.player), 280, 85, 3);
         enemy = new ArrayList<Enemy>();
         troll = new ArrayList<TrollEnemy>();
@@ -123,9 +127,14 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
         best = sharedPref.getInt("bestScore", defaultValue);
 //      Unless home-screen is off, player will be stayed at the middle of screen(check Player.java)
 
+        mplayer_background = MediaPlayer.create(getContext(), R.raw.bgmusic);
         mplayer_death = MediaPlayer.create(getContext(), R.raw.death);
         mplayer_explosion = MediaPlayer.create(getContext(), R.raw.hit);
         mplayer_powerup = MediaPlayer.create(getContext(), R.raw.powerup);
+
+        mplayer_background.setLooping(true);
+        mplayer_background.start();
+        mplayer_background.setVolume((float) 0.3, (float) 0.3);
     }
 
     @Override
@@ -240,6 +249,7 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 else {
                     int toTrollOrNot = rand.nextInt(10);
                     if (toTrollOrNot % 2 == 0) {
+
                         enemy.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
                                 WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))),
                                 100, 30, player.getScore(), 8));
@@ -247,6 +257,8 @@ public class gamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         troll.add(new TrollEnemy(BitmapFactory.decodeResource(getResources(), R.drawable.missile),
                                 WIDTH + 10, (int) ((rand.nextDouble() * (HEIGHT - 50))), 100, 30, player.getScore(), 8,
                                 player));
+//                        get the player position when a troll is added; to find the change in position of the player
+                        followPlayer_prev = player.getY();
                     }
                 }
 //              reset timer for the enemy to keep track of last enemy added

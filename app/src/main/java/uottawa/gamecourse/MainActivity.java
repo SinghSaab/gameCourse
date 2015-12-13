@@ -3,7 +3,6 @@ package uottawa.gamecourse;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,8 +11,6 @@ import android.view.WindowManager;
 
 
 public class MainActivity extends Activity {
-
-    MediaPlayer mplayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,10 +22,6 @@ public class MainActivity extends Activity {
 //        Change R.layout.activity_main(XML File) to set a new panel(Java Class) for where game would be running
         setContentView(new gamePanel(this));
 
-        mplayer = MediaPlayer.create(this, R.raw.bgmusic);
-        mplayer.setLooping(true);
-        mplayer.start();
-        mplayer.setVolume((float) 0.3, (float) 0.3);
     }
 
     @Override
@@ -46,7 +39,6 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
-        mplayer.pause();
         super.onPause();
 
     }
@@ -75,10 +67,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mplayer.stop();
-        mplayer.release();
-
-
     }
 
     @Override

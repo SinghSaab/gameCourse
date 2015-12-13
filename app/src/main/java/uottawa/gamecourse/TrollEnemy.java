@@ -13,6 +13,8 @@ public class TrollEnemy extends gameObject {
     private int score;
     private int speed;
     private int followPlayer;
+    private int followPlayer_prev;
+    private int playerDiff;
     private Random rand = new Random();
     private Animation animation = new Animation();
     private Bitmap spritesheet;
@@ -27,7 +29,7 @@ public class TrollEnemy extends gameObject {
         score = s;
 
         playerInstance = p;
-        speed = -gamePanel.MOVESPEED * 2 + (int) (rand.nextDouble() * score / 30);
+        speed = -gamePanel.MOVESPEED * 2 + (int) (rand.nextDouble() * score / 30 * 2);
 
 //        cap missile speed
         if (speed >= 40 - gamePanel.MOVESPEED) speed = 40 - gamePanel.MOVESPEED;
@@ -46,11 +48,15 @@ public class TrollEnemy extends gameObject {
     public void update() {
         x -= speed;
         followPlayer = playerInstance.getY();
-        if (y > 0 && y < followPlayer) {
-            y += 3 + (speed / 10);
-        }
-        if (y < gamePanel.HEIGHT - 127 && y > followPlayer) {
-            y -= 3 + (speed / 10);
+        followPlayer_prev = gamePanel.followPlayer_prev;
+        playerDiff = Math.abs(followPlayer - followPlayer_prev);
+        if (x <= (gamePanel.WIDTH - gamePanel.WIDTH / 3) && playerDiff > 30) {
+            if (y > 0 && y < followPlayer) {
+                y += 3 + (speed / 7);
+            }
+            if (y < gamePanel.HEIGHT - 127 && y > followPlayer) {
+                y -= 3 + (speed / 7);
+            }
         }
         animation.update();
     }
